@@ -37,12 +37,10 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
   const TREE_HEIGHT = 15;
   const MAX_RADIUS = 8;
 
-  // Sync mode ref
   useEffect(() => {
     lastModeRef.current = mode;
   }, [mode]);
 
-  // Load MediaPipe
   useEffect(() => {
     const initCV = async () => {
       try {
@@ -72,11 +70,9 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
     initCV();
   }, []);
 
-  // Three.js Init
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -84,18 +80,15 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
     renderer.toneMappingExposure = 2.2;
     containerRef.current.appendChild(renderer.domElement);
 
-    // Scene & Camera
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 5, 40);
     camera.lookAt(0, 5, 0);
 
-    // Environment
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
 
-    // Post processing
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
@@ -104,7 +97,6 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
     );
     composer.addPass(bloomPass);
 
-    // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambient);
 
@@ -120,11 +112,9 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
     spot2.position.set(-30, 20, -30);
     scene.add(spot2);
 
-    // Main Group
     const mainGroup = new THREE.Group();
     scene.add(mainGroup);
 
-    // Particles Generation
     const particles: THREE.Mesh[] = [];
     const geometries = [
       new THREE.BoxGeometry(0.3, 0.3, 0.3),
@@ -133,10 +123,10 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
     ];
     
     const materials = [
-      new THREE.MeshStandardMaterial({ color: 0xd4af37 }), // Gold
-      new THREE.MeshStandardMaterial({ color: 0x006400 }), // Dark Green
-      new THREE.MeshPhysicalMaterial({ color: 0xd4af37, clearcoat: 1 }), // Reflective Gold
-      new THREE.MeshPhysicalMaterial({ color: 0xff0000, clearcoat: 1 }), // Red
+      new THREE.MeshStandardMaterial({ color: 0xd4af37 }),
+      new THREE.MeshStandardMaterial({ color: 0x006400 }),
+      new THREE.MeshPhysicalMaterial({ color: 0xd4af37, clearcoat: 1 }),
+      new THREE.MeshPhysicalMaterial({ color: 0xff0000, clearcoat: 1 }),
       createCandyCaneMaterial()
     ];
 
@@ -184,37 +174,27 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
       frameId = requestAnimationFrame(animate);
       const time = clock.getElapsedTime();
 
-      // Flexible Hand Tracking & Rotation Logic
       if (landmarkerRef.current && videoRef.current && videoRef.current.readyState >= 2) {
         const results = landmarkerRef.current.detectForVideo(videoRef.current, performance.now());
         if (results.landmarks && results.landmarks.length > 0) {
           const landmarks = results.landmarks[0];
-          
-          // Enhanced responsiveness for mainGroup rotation
           const wrist = landmarks[0];
-          // Map wrist position to a wider rotation range for better accessibility
-          // Horizontal: 720 degrees (2 full turns), Vertical: 144 degrees
           const targetRY = (wrist.x - 0.5) * Math.PI * 4; 
           const targetRX = (wrist.y - 0.5) * Math.PI * 0.8;
           
           mainGroup.rotation.y += (targetRY - mainGroup.rotation.y) * 0.15;
           mainGroup.rotation.x += (targetRX - mainGroup.rotation.x) * 0.15;
 
-          // Gesture Logic Implementation (Strictly following thresholds)
           const thumbTip = landmarks[4];
           const indexTip = landmarks[8];
           const midTip = landmarks[12];
           const ringTip = landmarks[16];
           const pinkyTip = landmarks[20];
           
-          // 1. Pinch Detection (Thumb 4 + Index 8)
           const pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
-          
-          // 2. Fist / Open Hand Detection (Tips 8,12,16,20 relative to wrist 0)
           const fingerTips = [indexTip, midTip, ringTip, pinkyTip];
           const avgFingerDist = fingerTips.reduce((sum, tip) => sum + Math.hypot(tip.x - wrist.x, tip.y - wrist.y), 0) / 4;
 
-          // Threshold-based mode switching
           if (pinchDist < 0.05) {
              if (lastModeRef.current !== AppMode.FOCUS) onGestureChange(AppMode.FOCUS);
           } else if (avgFingerDist < 0.25) {
@@ -225,7 +205,6 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
         }
       }
 
-      // Update Particles
       particles.forEach((p, i) => {
         const target = new THREE.Vector3();
         const mode = lastModeRef.current;
@@ -257,32 +236,24 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
         p.rotation.y += p.userData.randomSpeed;
       });
 
-      // Update Photos Animation & Orientation
       photos.forEach((photoGroup, idx) => {
         const mode = lastModeRef.current;
         const isLatest = idx === photos.length - 1;
 
         if (mode === AppMode.FOCUS && isLatest) { 
-          // Move focused photo to a central "inspection" position
-          // Using a local offset that remains relative to mainGroup's orientation if needed,
-          // but here we target a specific world-viewable spot
           photoGroup.position.lerp(new THREE.Vector3(0, 5, 28), 0.1);
           photoGroup.scale.lerp(new THREE.Vector3(5, 5, 5), 0.1);
           photoGroup.rotation.y = Math.sin(time * 0.5) * 0.1;
         } else {
-          // Standard Orbiting
           const count = photos.length;
           const t = idx / Math.max(count, 1);
           const orbitRadius = mode === AppMode.FOCUS ? 20 : 12;
-          // Slow down orbit in FOCUS mode to let user appreciate details
           const orbitSpeed = mode === AppMode.FOCUS ? 0.05 : 0.15;
           const angle = t * Math.PI * 2 + time * orbitSpeed;
           
           const orbitPos = new THREE.Vector3(Math.cos(angle) * orbitRadius, 5 + Math.sin(time + idx) * 2, Math.sin(angle) * orbitRadius);
           photoGroup.position.lerp(orbitPos, 0.05);
           photoGroup.scale.lerp(new THREE.Vector3(1.2, 1.2, 1.2), 0.05);
-          
-          // CRITICAL: Make all photos face the CAMERA directly for better appreciation
           photoGroup.lookAt(camera.position);
         }
       });
@@ -348,7 +319,6 @@ const ChristmasTreeScene: React.FC<Props> = ({ mode, onLoaded, onGestureChange, 
 
   function addPhoto(scene: THREE.Scene, photosArr: THREE.Group[], parent: THREE.Group, texture: THREE.Texture) {
     const group = new THREE.Group();
-    // Fix: Cast texture.image to any to resolve 'unknown' property access errors for width and height
     const img = texture.image as any;
     const aspect = img ? (img.width / img.height) : 1;
     const w = 4;

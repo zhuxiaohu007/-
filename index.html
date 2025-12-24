@@ -29,17 +29,22 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://esm.sh/three@^0.182.0",
-    "three/": "https://esm.sh/three@^0.182.0/",
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "react": "https://esm.sh/react@19.2.3",
+    "react-dom": "https://esm.sh/react-dom@19.2.3",
+    "react-dom/client": "https://esm.sh/react-dom@19.2.3/client",
+    "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/+esm",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "@mediapipe/tasks-vision": "https://esm.sh/@mediapipe/tasks-vision@^0.10.22-rc.20250304"
+    "three/": "https://esm.sh/three@^0.182.0/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
+    <!-- 关键修复：添加入口文件引用 -->
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
