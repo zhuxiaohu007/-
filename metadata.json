@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Holiday Magic Particle Tree",
+  "description": "An interactive 3D particle Christmas tree using Three.js and MediaPipe hand tracking for gesture-controlled magic. Features a champagne gold aesthetic, photo upload wall, and three distinct animation modes.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
